@@ -1,0 +1,8 @@
+{
+  "plugins": [{
+    "id": "coro_diff",
+    "type": "library",
+    "description": "Diff library that yields.",
+    "version": "0.1",
+  }]
+}
