@@ -13,12 +13,22 @@ local function compare_solutions(sol_a, sol_b)
   for i=1,#sol_a do
     local s_a = sol_a[i]
     local s_b = sol_b[i]
-    if s_a.start_index ~= s_b.start_index or s_a.end_index ~= s_b.end_index or s_a.direction ~= s_b.direction then
-      error(string.format("Different solution start_index: %d/%d end_index: %d/%d direction: %s/%s at index %d", s_a.start_index, s_b.start_index, s_a.end_index, s_b.end_index, s_a.direction, s_b.direction, i))
+    for _, key in ipairs({ "a_index", "a_len", "b_index", "b_len", "direction" }) do
+      if s_a[key] ~= s_b[key] then
+        error(string.format("Different solution a_index: %d/%d b_index: %d/%d a_len: %d/%d b_len: %d/%d direction: %s/%s at index %d",
+                            s_a.a_index, s_b.a_index,
+                            s_a.b_index, s_b.b_index,
+                            s_a.a_len, s_b.a_len,
+                            s_a.b_len, s_b.b_len,
+                            s_a.direction, s_b.direction, i))
+      end
     end
-    for j=s_a.start_index,s_a.end_index do
-      if s_a.values[j - s_a.start_index + 1] ~= s_b.values[j - s_b.start_index + 1] then
-        error(string.format("Different solution values [%s] / [%s] at solution %d index %d", s_a.values[j - s_a.start_index + 1], s_b.values[j - s_b.start_index + 1], i, j))
+    if #s_a.values ~= #s_b.values then
+      error(string.format("Different number of values %d/%d", #s_a.values, #s_b.values))
+    end
+    for j=1,#s_a.values do
+      if s_a.values[j] ~= s_b.values[j] then
+        error(string.format("Different solution values [%s] / [%s] at solution %d index %d", s_a.values[j], s_b.values[j], i, j))
       end
     end
   end
@@ -58,44 +68,58 @@ local tests = {
     b = "CBABAC",
     expected = {
       {
-        start_index = 1,
-        end_index = 2,
+        a_index = 1,
+        a_len = 2,
+        b_index = 1,
+        b_len = 0,
         direction = "-",
         values = { "A", "B" }
       },
       {
-        start_index = 1,
-        end_index = 1,
+        a_index = 3,
+        a_len = 1,
+        b_index = 1,
+        b_len = 1,
         direction = "=",
         values = { "C" }
       },
       {
-        start_index = 4,
-        end_index = 4,
+        a_index = 4,
+        a_len = 1,
+        b_index = 2,
+        b_len = 0,
         direction = "-",
         values = { "A" }
       },
       {
-        start_index = 2,
-        end_index = 2,
+        a_index = 5,
+        a_len = 1,
+        b_index = 2,
+        b_len = 1,
         direction = "=",
         values = { "B" }
       },
       {
-        start_index = 3,
-        end_index = 3,
+        a_index = 6,
+        a_len = 0,
+        b_index = 3,
+        b_len = 1,
         direction = "+",
         values = { "A" }
       },
       {
-        start_index = 4,
-        end_index = 5,
+        a_index = 6,
+        a_len = 2,
+        b_index = 4,
+        b_len = 2,
         direction = "=",
         values = { "B", "A" }
       },
       {
-        start_index = 6,
-        end_index = 6,
+        a_index = 8,
+        a_len = 0,
+        b_index = 6,
+        b_len = 1,
         direction = "+",
         values = { "C" }
       },
@@ -114,8 +138,10 @@ local tests = {
     b = "CBABAC",
     expected = {
       {
-        start_index = 1,
-        end_index = 6,
+        a_index = 1,
+        a_len = 0,
+        b_index = 1,
+        b_len = 6,
         direction = "+",
         values = { "C", "B", "A", "B", "A", "C" }
       },
@@ -127,8 +153,10 @@ local tests = {
     b = "",
     expected = {
       {
-        start_index = 1,
-        end_index = 7,
+        a_index = 1,
+        a_len = 7,
+        b_index = 1,
+        b_len = 0,
         direction = "-",
         values = { "A", "B", "C", "A", "B", "B", "A" }
       },
@@ -140,8 +168,10 @@ local tests = {
     b = "ABCABBA",
     expected = {
       {
-        start_index = 1,
-        end_index = 7,
+        a_index = 1,
+        a_len = 7,
+        b_index = 1,
+        b_len = 7,
         direction = "=",
         values = { "A", "B", "C", "A", "B", "B", "A" }
       },

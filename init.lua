@@ -29,7 +29,7 @@ coro_diff.default_implementation = has_native_midpoint and "native" or "lua"
 ---| '"+"' Added from `b`
 ---| '"-"' Removed from `a`
 ---| '"="' Same in `a` and `b`
----@alias libraries.coro_diff.solution_item {start_index: integer, end_index: integer, direction: libraries.coro_diff.direction, values: any[]}
+---@alias libraries.coro_diff.solution_item {a_index: integer, a_len: integer, b_index: integer, b_len: integer, direction: libraries.coro_diff.direction, values: any[]}
 ---@alias libraries.coro_diff.solution libraries.coro_diff.solution_item[]
 
 ---Get diff between a and b.
@@ -110,17 +110,23 @@ function coro_diff.get_diff(a, b, cache_strings, force_lua)
     find_path(0, 0, a_len, b_len)
 
     local solution = { }
-    local function push_to_solution(direction, index, value)
+    local function push_to_solution(direction, a_index, b_index, value)
+      local a_offset, b_offset = (direction == "+" and 0 or 1), (direction == "-" and 0 or 1)
       if not solution[#solution] or solution[#solution].direction ~= direction then
-        table.insert(solution, { start_index = index, end_index = index, direction = direction, values = { value } })
+        table.insert(solution, {
+          a_index = a_index, a_len = a_offset,
+          b_index = b_index, b_len = b_offset,
+          direction = direction, values = { value }
+        })
       else
-        solution[#solution].end_index = index
+        solution[#solution].a_len = a_index - solution[#solution].a_index + a_offset
+        solution[#solution].b_len = b_index - solution[#solution].b_index + b_offset
         table.insert(solution[#solution].values, value)
       end
     end
     local function walk_diagonal(x1, y1, x2, y2)
       while x1 < x2 and y1 < y2 and a_orig[x1+1] == b_orig[y1+1] do
-        push_to_solution("=", y1 + 1, b_orig[y1 + 1])
+        push_to_solution("=", x1 + 1, y1 + 1, b_orig[y1 + 1])
         x1, y1 = x1 + 1, y1 + 1
       end
       return x1, y1
@@ -133,10 +139,10 @@ function coro_diff.get_diff(a, b, cache_strings, force_lua)
 
       local diff = (x2 - x1) - (y2 - y1)
       if diff > 0 then
-        push_to_solution("-", x1 + 1, a_orig[x1 + 1])
+        push_to_solution("-", x1 + 1, y1 + 1, a_orig[x1 + 1])
         x1 = x1 + 1
       elseif diff < 0 then
-        push_to_solution("+", y1 + 1, b_orig[y1 + 1])
+        push_to_solution("+", x1 + 1, y1 + 1, b_orig[y1 + 1])
         y1 = y1 + 1
       end
 
