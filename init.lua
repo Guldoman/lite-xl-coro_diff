@@ -120,7 +120,7 @@ function coro_diff.get_diff(a, b, cache_strings, force_lua)
     end
     local function walk_diagonal(x1, y1, x2, y2)
       while x1 < x2 and y1 < y2 and a_orig[x1+1] == b_orig[y1+1] do
-        push_to_solution("=", x1 + 1, a_orig[x1 + 1])
+        push_to_solution("=", y1 + 1, b_orig[y1 + 1])
         x1, y1 = x1 + 1, y1 + 1
       end
       return x1, y1

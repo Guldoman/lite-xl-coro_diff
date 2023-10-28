@@ -64,8 +64,8 @@ local tests = {
         values = { "A", "B" }
       },
       {
-        start_index = 3,
-        end_index = 3,
+        start_index = 1,
+        end_index = 1,
         direction = "=",
         values = { "C" }
       },
@@ -76,8 +76,8 @@ local tests = {
         values = { "A" }
       },
       {
-        start_index = 5,
-        end_index = 5,
+        start_index = 2,
+        end_index = 2,
         direction = "=",
         values = { "B" }
       },
@@ -88,8 +88,8 @@ local tests = {
         values = { "A" }
       },
       {
-        start_index = 6,
-        end_index = 7,
+        start_index = 4,
+        end_index = 5,
         direction = "=",
         values = { "B", "A" }
       },
