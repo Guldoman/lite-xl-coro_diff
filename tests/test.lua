@@ -8,6 +8,43 @@ end
 ---@diagnostic disable-next-line: assign-type-mismatch
 local coro_diff = require "init"
 
+local function verify_solution(sol)
+  local last_a, last_b = 1, 1
+  for i, step in ipairs(sol) do
+    if step.a_index ~= last_a then
+      error(string.format("Bad solution a_index: %d/%d at index %d", step.a_index, last_a, i))
+    end
+    if step.b_index ~= last_b then
+      error(string.format("Bad solution b_index: %d/%d at index %d", step.b_index, last_b, i))
+    end
+    if step.direction == "=" then
+      if step.a_len ~= step.b_len then
+        error(string.format("Bad solution len: %d/%d at index %d", step.a_len, step.b_len, i))
+      end
+      if step.a_len ~= #step.values then
+        error(string.format("Bad solution number of values %d/%d at index %d", #step.values, step.a_len, i))
+      end
+    elseif step.direction == "-" then
+      if step.a_len ~= #step.values then
+        error(string.format("Bad solution number of values %d/%d at index %d", #step.values, step.a_len, i))
+      end
+      if step.b_len ~= 0 then
+        error(string.format("Bad solution b_len: %d expected 0 at index %d", step.b_len, i))
+      end
+    elseif step.direction == "+" then
+      if step.b_len ~= #step.values then
+        error(string.format("Bad solution number of values %d/%d at index %d", #step.values, step.b_len, i))
+      end
+      if step.a_len ~= 0 then
+        error(string.format("Bad solution a_len: %d expected 0 at index %d", step.a_len, i))
+      end
+    else
+    end
+    last_a = step.a_index + step.a_len
+    last_b = step.b_index + step.b_len
+  end
+end
+
 local function compare_solutions(sol_a, sol_b)
   if #sol_a ~= #sol_b then error(string.format("Different number of solutions")) end
   for i=1,#sol_a do
@@ -41,6 +78,7 @@ local function test(a, b, expected)
     native_done, native_solution = native_differ_getter(math.maxinteger)
   until native_done
   assert(native_solution)
+  verify_solution(native_solution)
 
   local native_uncached_differ_getter = coro_diff.get_diff(a, b, false, false)
   local native_uncached_done, native_uncached_solution
