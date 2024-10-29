@@ -1,0 +1,50 @@
+name: CI
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+      - name: Update packages
+        run: sudo apt update
+      - name: Install lua
+        run: sudo apt install -y lua5.4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: pip install meson ninja
+      - name: Setup meson
+        run: meson setup --buildtype=release build
+      - name: Build
+        run: meson compile -C build
+      - name: Run Tests
+        run: meson test -C build
+      - name: Create test summary
+        uses: test-summary/action@v2
+        with:
+          paths: build/meson-logs/testlog.junit.xml
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: myers_midpoint
+          path: build/myers_midpoint.so
+
+  Publish:
+    needs: Build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: myers_midpoint/myers_midpoint.so
