@@ -2,6 +2,11 @@ name: CI
 on:
   push:
   workflow_dispatch:
+    inputs:
+      version:
+        description: Release version
+        type: string
+        required: false
 
 jobs:
   Build:
@@ -37,14 +42,40 @@ jobs:
 
   Publish:
     needs: Build
-    if: github.ref_type == 'tag'
+    if: ${{ inputs.version != '' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+      - name: Update packages
+        run: sudo apt update
+      - name: Install dependencies
+        run: sudo apt install -y jq moreutils
       - name: Download Artifacts
         uses: actions/download-artifact@v4
+      - name: Obtain native module checksum
+        run: |
+          echo CHECKSUM="$(sha256sum myers_midpoint/myers_midpoint.so | awk '{ print $1 }')" >> "$GITHUB_ENV"
+      - name: Update manifest
+        run: |
+          jq ".addons[0].version = \"${{ inputs.version }}\" |\
+              .addons[0].files[0].checksum = \"${CHECKSUM}\" |\
+              .addons[0].files[0].url = \"${{ github.server_url }}/${{ github.repository }}/releases/download/${{ inputs.version }}/myers_midpoint.so\"" manifest.json | sponge manifest.json
+      - name: Configure git
+        run: |
+          git config user.name 'github-actions[bot]' && git config user.email 'github-actions[bot]@users.noreply.github.com'
+      - name: Push updated manifest
+        run: |
+          git add manifest.json && git commit -m 'chore: update manifest'
+      - name: Create a tag
+        run: git tag -a -m "Version ${{ inputs.version }}" "${{ inputs.version }}"
+      - name: Push changes
+        run: git push --follow-tags
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
+          name: coro_diff ${{ inputs.version }}
+          tag_name: ${{ inputs.version }}
           files: myers_midpoint/myers_midpoint.so
+          draft: true

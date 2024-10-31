@@ -4,6 +4,14 @@
     "type": "library",
     "description": "Diff library that yields.",
     "version": "0.1.0",
-    "path": "library"
+    "path": "library",
+    "files": [
+      {
+        "arch": "x86_64-linux",
+        "checksum": "SKIP",
+        "url": "https://github.com/Guldoman/lite-xl-coro_diff/releases/download/0.1.0/myers_midpoint.so",
+        "path": "native"
+      }
+    ]
   }]
 }
