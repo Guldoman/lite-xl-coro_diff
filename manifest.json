@@ -11,7 +11,7 @@
           "arch": "x86_64-linux",
           "checksum": "5e2ff633a043ccb901b8019f3e58e837cd440f276c6038e1832888b98f24c275",
           "url": "https://github.com/Guldoman/lite-xl-coro_diff/releases/download/0.1.0/myers_midpoint.so",
-          "path": "native"
+          "path": "native/myers_midpoint.so"
         }
       ]
     }
