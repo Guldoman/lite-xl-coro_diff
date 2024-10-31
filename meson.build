@@ -1,5 +1,5 @@
 project('coro_diff', 'c',
-  version: '0.1',
+  version: '0.1.0',
   default_options: ['warning_level=3']
 )
 
@@ -21,7 +21,7 @@ tests_dir = meson.current_source_dir() + '/tests'
 if lua.found()
   test('test', lua,
     env: {
-      'LUA_PATH': meson.current_source_dir() + '/?.lua',
+      'LUA_PATH': meson.current_source_dir() + '/library/?.lua',
       'LUA_CPATH': meson.current_build_dir() + '/?.so'
     },
     args: [tests_dir + '/test.lua'],
