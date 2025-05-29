@@ -27,6 +27,7 @@ typedef struct Resumable {
 typedef struct {
 	size_t len;
 	char string[STRING_CACHE_SIZE];
+	uint64_t bloom;
 } SizedPartString;
 
 typedef struct {
@@ -50,6 +51,13 @@ static int f_get_string_cache(lua_State* L) {
 		const char* string = luaL_tolstring(L, -1, &len);
 		sps[i].len = len > STRING_CACHE_SIZE ? STRING_CACHE_SIZE : len;
 		memcpy(&sps[i].string, string, sps[i].len);
+
+		// Use a basic bloom cache to do a quick inequality check
+		sps[i].bloom = 0;
+		for (size_t j = 0; j < sps[i].len; j++) {
+			sps[i].bloom |= ((uint64_t)1 << (string[j] % 64));
+		}
+
 		lua_pop(L, 2);
 	}
 
@@ -159,7 +167,10 @@ FORWARDS(cached,
 	SizedPartString src_sps = src_sps_c->sps[x];
 	SizedPartString dst_sps = dst_sps_c->sps[y];
 	bool ok = false;
-	if (src_sps.len == dst_sps.len && memcmp(src_sps.string, dst_sps.string, src_sps.len) == 0) {
+	if (src_sps.len == dst_sps.len
+	    && src_sps.bloom == dst_sps.bloom
+	    && memcmp(src_sps.string, dst_sps.string, src_sps.len) == 0
+	) {
 		// If the string is long 32 bytes or more, check it in full
 		ok = src_sps.len < STRING_CACHE_SIZE;
 		if (!ok) {
@@ -180,7 +191,10 @@ BACKWARDS(cached,
 	SizedPartString src_sps = src_sps_c->sps[x - 1];
 	SizedPartString dst_sps = dst_sps_c->sps[y - 1];
 	bool ok = false;
-	if (src_sps.len == dst_sps.len && memcmp(src_sps.string, dst_sps.string, src_sps.len) == 0) {
+	if (src_sps.len == dst_sps.len
+	    && src_sps.bloom == dst_sps.bloom
+	    && memcmp(src_sps.string, dst_sps.string, src_sps.len) == 0
+	) {
 		// If the string is long 32 bytes or more, check it in full
 		ok = src_sps.len < STRING_CACHE_SIZE;
 		if (!ok) {
